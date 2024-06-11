@@ -4,7 +4,7 @@
  Source Server         : opc
  Source Server Type    : MySQL
  Source Server Version : 80400
- Source Host           : 217.142.228.188:3306
+ Source Host           : 127.0.0.1:3306
  Source Schema         : bilibili_danmu
 
  Target Server Type    : MySQL
