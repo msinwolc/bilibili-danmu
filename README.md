@@ -8,7 +8,7 @@ This project uses a `.env` file for configuration. Create a `.env` file in the r
 
 ```ini
 uid=123456
-roomid=123456
+roomid=123456,123456
 cookie=COOKIE
 buvid=BUVID
 
@@ -23,7 +23,7 @@ database=MYSQL_DB
 ### Description of Variables
 
 - `uid`: Your user ID. With the `uid`, you can collect danmu along with other users' names and IDs. This prevents losing danmu information. It can be set to default `0`.
-- `roomid`: The ID of the live room you want to watch.
+- `roomid`: The ID of the live room you want to watch, separate with commas.
 - `cookie`: Required to get the key to watch live info. Can be left blank if `uid` is `0`.
 - `buvid`: Similar to `cookie`.
 
@@ -49,5 +49,5 @@ npm start
 ## TODO
 
 - Add support for other databases
-- Collect Super Chat (SC) danmu information
+- ~~ Collect Super Chat (SC) danmu information ~~
 - ...
