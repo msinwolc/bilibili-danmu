@@ -4,7 +4,7 @@ dotenv.config()
 
 interface Env {
     UID: number;
-    ROOMID: number,
+    ROOMID: string,
     COOKIE: string,
     BUIVD: string,
 
@@ -22,7 +22,7 @@ const getEnv = (): Env => {
 
     return {
         UID: parseInt(process.env.uid, 10),
-        ROOMID: parseInt(process.env.roomid),
+        ROOMID: process.env.roomid,
         COOKIE: process.env.cookie,
         BUIVD: process.env.buvid,
         MYSQL_HOST: process.env.host,
