@@ -1,4 +1,4 @@
-import mysql from 'mysql2'
+import mysql from 'mysql2/promise'
 import { env } from '../src/config/config';
 
 const pool = mysql.createPool({
@@ -6,26 +6,47 @@ const pool = mysql.createPool({
     user: env.MYSQL_USER,
     password: env.MYSQL_PASSWD,
     database: env.MYSQL_DATABASE,
-    connectionLimit: 10,
+    connectionLimit: 151,
 });
 
-export const insertData = (table_name: string, data: {}) => {
-    pool.getConnection((err, connection) => {
-        if (err) {
-            console.error("Connect database error: ", err.stack);
-            return;
-        }
-
-        console.log("Connected to database");
-        
-        connection.query(`INSERT INTO ${table_name} SET ?`, data, (err, result, fields) => {
+export const insertData = async (table_name: string, data: Object) => {
+    try {
+        const connection = await pool.getConnection();
+        try {
+            const query = `INSERT INTO ?? SET ?`;
+            await connection.query(query, [table_name, data]);
+        } catch (err) {
+            const error = err as Error;
+            console.error("Insert data error: ", error.message);
+        } finally {
             connection.release();
-            if (err) {
-                console.error("Insert error: ", err.message);
-                return;
-            }
-            console.log("Insert success");
-            
-        })
-    });
-}
+        }
+    } catch (err) {
+        const error = err as Error;
+        console.error("Connect database error: ", error.stack);
+    }
+};
+
+export const insertDataBatch = async (table_name: string, data: any[]) => {
+    try {
+        const connection = await pool.getConnection();
+        try {
+            const columns = Object.keys(data[0]);
+            const values = data.map(Object.values);
+
+            const placeholders = values.map(row => `(${row.map(() => '?').join(',')})`).join(',');
+            const query = `INSERT INTO ${table_name} (${columns.join(',')}) VALUES ${placeholders}`;
+
+            const flatValues = values.reduce((acc, val) => acc.concat(val), []);
+            await connection.query(query, flatValues);
+        } catch (err) {
+            const error = err as Error;
+            console.error("Insert data error: ", error.message);
+        } finally {
+            connection.release();
+        }
+    } catch (err) {
+        const error = err as Error;
+        console.error("Connect database error: ", error.stack);
+    }
+};

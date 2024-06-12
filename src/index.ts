@@ -23,7 +23,7 @@ env.ROOMID.split(",").forEach((strid) => {
             onClose: () => {
                 console.log(`Connect ${rid} close`);
             },
-            onGift: (msg) => {
+            onGift: async (msg) => {
                 let giftInfo = {
                     roomid: rid,
                     gift_name: msg.body.gift_name,
@@ -33,19 +33,19 @@ env.ROOMID.split(",").forEach((strid) => {
                     combo: msg.body.combo?.combo_num,
                     ...basicInfo(msg),
                 }
-                console.log(giftInfo);
-                insertData("gift_infos", giftInfo);
+                // console.log(giftInfo);
+                await insertData("gift_infos", giftInfo);
             },
-            onIncomeDanmu: (msg) => {
+            onIncomeDanmu: async (msg) => {
                 let danmuInfo = {
                     roomid: rid,
                     content: msg.body.content,
                     ...basicInfo(msg),
-                }
-                console.log(danmuInfo);
-                insertData("danmu_infos", danmuInfo);
+                };
+                // console.log(danmuInfo);
+                await insertData("danmu_infos", danmuInfo);
             },
-            onIncomeSuperChat: (msg) => {
+            onIncomeSuperChat: async (msg) => {
                 let sc_info = {
                     roomid: rid,
                     content: msg.body.content,
@@ -53,7 +53,7 @@ env.ROOMID.split(",").forEach((strid) => {
                     time: msg.body.time,
                     ...basicInfo(msg),
                 };
-                insertData("sc_infos", sc_info);
+                await insertData("sc_infos", sc_info);
             }
         }
 
