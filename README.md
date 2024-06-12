@@ -49,5 +49,5 @@ npm start
 ## TODO
 
 - Add support for other databases
-- ~~ Collect Super Chat (SC) danmu information ~~
+- ~~Collect Super Chat (SC) danmu information~~
 - ...
