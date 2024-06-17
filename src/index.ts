@@ -1,4 +1,4 @@
-import { startListen, type MsgHandler, type Message } from "blive-message-listener";
+import { startListen, type MsgHandler, type Message, type MessageListener } from "blive-message-listener";
 import dayjs from "dayjs";
 
 // custom
@@ -6,11 +6,25 @@ import { env } from '../src/config/config';
 import { insertData } from "../util/mysql";
 import { fetchTokenWithCookies } from "../util/request";
 
-env.ROOMID.split(",").forEach((strid) => {
-    fetchTokenWithCookies(strid).then(token => {
-        console.log("Get token success!");
+let listeners: Record<number, MessageListener> = {};
 
-        let rid = parseInt(strid, 10);
+const basicInfo = (msg: Message<any>) => {
+    let now = dayjs();
+    let user_basic_info = {
+        uid: msg.body.user.uid,
+        uname: msg.body.user.uname,
+        badge_name: msg.body.user.badge?.name,
+        badge_level: msg.body.user.badge?.level,
+        created_at: now.format('YYYY-MM-DD HH:mm:ss'),
+        updated_at: now.format('YYYY-MM-DD HH:mm:ss'),
+    }
+
+    return user_basic_info;
+};
+
+const startListening = (rid: number) => {
+    fetchTokenWithCookies(rid.toString()).then(token => {
+        console.log("Get token success!");
 
         const handler: MsgHandler = {
             onStartListen: () => {
@@ -18,7 +32,6 @@ env.ROOMID.split(",").forEach((strid) => {
             },
             onError: (e) => {
                 console.log(`Connect ${rid} error: `, e.message);
-
             },
             onClose: () => {
                 console.log(`Connect ${rid} close`);
@@ -33,7 +46,6 @@ env.ROOMID.split(",").forEach((strid) => {
                     combo: msg.body.combo?.combo_num,
                     ...basicInfo(msg),
                 }
-                // console.log(giftInfo);
                 await insertData("gift_infos", giftInfo);
             },
             onIncomeDanmu: async (msg) => {
@@ -42,7 +54,6 @@ env.ROOMID.split(",").forEach((strid) => {
                     content: msg.body.content,
                     ...basicInfo(msg),
                 };
-                // console.log(danmuInfo);
                 await insertData("danmu_infos", danmuInfo);
             },
             onIncomeSuperChat: async (msg) => {
@@ -59,8 +70,8 @@ env.ROOMID.split(",").forEach((strid) => {
 
         console.log(`Start listen ${rid}...`);
 
-        // multiple listen
-        startListen(rid, handler, {
+        // Start listening
+        const listen = startListen(rid, handler, {
             ws: {
                 uid: env.UID,
                 buvid: env.BUIVD,
@@ -68,19 +79,36 @@ env.ROOMID.split(",").forEach((strid) => {
                 key: token
             }
         });
+
+        // Save the listener so we can close it later
+        listeners[rid] = listen;
     });
-});
-
-const basicInfo = (msg: Message<any>) => {
-    let now = dayjs();
-    let user_basic_info = {
-        uid: msg.body.user.uid,
-        uname: msg.body.user.uname,
-        badge_name: msg.body.user.badge?.name,
-        badge_level: msg.body.user.badge?.level,
-        created_at: now.format('YYYY-MM-DD HH:mm:ss'),
-        updated_at: now.format('YYYY-MM-DD HH:mm:ss'),
-    }
-
-    return user_basic_info;
 };
+
+// Function to start listening for all room IDs
+const startAllListeners = () => {
+    env.ROOMID.split(",").forEach((strid) => {
+        let rid = parseInt(strid, 10);
+        startListening(rid);
+    });
+};
+
+// Function to close all listeners
+const closeAllListeners = () => {
+    Object.values(listeners).forEach(listener => {
+        if (listener) {
+            listener.close();
+        }
+    });
+    listeners = {};  // Reset the listeners object
+};
+
+// Start listeners initially
+startAllListeners();
+
+// Set an interval to restart listeners every hour
+setInterval(() => {
+    console.log("Restarting all listeners...");
+    closeAllListeners();
+    startAllListeners();
+}, 60 * 60 * 1000);  // 60 minutes * 60 seconds * 1000 milliseconds
